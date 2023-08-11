@@ -3,6 +3,7 @@ plugins {
     kotlin("native.cocoapods")
     id("com.android.library")
     id("org.jetbrains.compose")
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 kotlin {
@@ -22,17 +23,41 @@ kotlin {
             baseName = "shared"
             isStatic = true
         }
-        extraSpecAttributes["resources"] = "['src/commonMain/resources/**', 'src/iosMain/resources/**']"
+        extraSpecAttributes["resources"] =
+            "['src/commonMain/resources/**', 'src/iosMain/resources/**']"
     }
 
     sourceSets {
+        val ktorVersion = "2.3.3"
+        val napierVersion  = "2.6.1"
         val commonMain by getting {
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material)
+                implementation(compose.animation)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
+//                多平台，图片加载
+                implementation("media.kamel:kamel-image:0.7.1")
+                implementation("io.ktor:ktor-client-core:$ktorVersion")
+//                序列化
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0-RC")
+                implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+//                //MVVM - 这里面没有navigation
+//                api("dev.icerock.moko:mvvm-core:0.16.1")
+//                api("dev.icerock.moko:mvvm-compose:0.16.1")
+//                api("dev.icerock.moko:mvvm-flow-compose:0.16.1")
+
+                // Please do remember to add compose.foundation and compose.animation
+                api("moe.tlaster:precompose:1.4.3")
+                api("moe.tlaster:precompose-viewmodel:1.4.3")
+
+//                日志
+                api("io.github.aakira:napier:$napierVersion")
+                //k-v 存储
+                implementation("com.russhwolf:multiplatform-settings:1.0.0")
             }
         }
         val androidMain by getting {
@@ -40,6 +65,8 @@ kotlin {
                 api("androidx.activity:activity-compose:1.6.1")
                 api("androidx.appcompat:appcompat:1.6.1")
                 api("androidx.core:core-ktx:1.9.0")
+                //android ktor
+                implementation("io.ktor:ktor-client-android:$ktorVersion")
             }
         }
         val iosX64Main by getting
@@ -50,6 +77,10 @@ kotlin {
             iosX64Main.dependsOn(this)
             iosArm64Main.dependsOn(this)
             iosSimulatorArm64Main.dependsOn(this)
+            dependencies {
+                //ios ktor
+                implementation("io.ktor:ktor-client-darwin:$ktorVersion")
+            }
         }
     }
 }
@@ -71,6 +102,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlin {
-        jvmToolchain(11)
+        jvmToolchain(17)
     }
 }
